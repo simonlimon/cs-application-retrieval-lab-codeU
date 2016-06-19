@@ -1,12 +1,7 @@
 package com.flatironschool.javacs;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 import redis.clients.jedis.Jedis;
@@ -44,7 +39,7 @@ public class WikiSearch {
 	/**
 	 * Prints the contents in order of term frequency.
 	 * 
-	 * @param map
+	 *
 	 */
 	private  void print() {
 		List<Entry<String, Integer>> entries = sort();
@@ -60,8 +55,20 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch or(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		Map<String,Integer> orMap = new HashMap<>();
+		for (String url : this.map.keySet()) {
+			if (that.map.containsKey(url)) {
+				orMap.put(url, that.map.get(url) + this.map.get(url));
+			} else {
+				orMap.put(url, this.map.get(url));
+			}
+		}
+
+		for (String url : that.map.keySet()) {
+			orMap.putIfAbsent(url, that.map.get(url));
+		}
+
+		return new WikiSearch(orMap);
 	}
 	
 	/**
@@ -71,8 +78,15 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch and(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		Map<String,Integer> andMap = new HashMap<>();
+
+		for (String url : this.map.keySet()) {
+			if (that.map.containsKey(url)) {
+				andMap.put(url, that.map.get(url) + this.map.get(url));
+			}
+		}
+
+		return new WikiSearch(andMap);
 	}
 	
 	/**
@@ -82,8 +96,15 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch minus(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+		Map<String,Integer> minusMap = new HashMap<>();
+
+		for (String url : this.map.keySet()) {
+			if (!that.map.containsKey(url)) {
+				minusMap.put(url, this.map.get(url));
+			}
+		}
+
+		return new WikiSearch(minusMap);
 	}
 	
 	/**
@@ -104,9 +125,18 @@ public class WikiSearch {
 	 * @return List of entries with URL and relevance.
 	 */
 	public List<Entry<String, Integer>> sort() {
-        // FILL THIS IN!
-		return null;
+		ArrayList<Entry<String, Integer>> list = new ArrayList<Entry<String, Integer>>(map.entrySet());
+		Collections.sort(list, comparator);
+		return list;
 	}
+
+
+	Comparator<Entry<String, Integer>> comparator = new Comparator<Entry<String, Integer>>() {
+		@Override
+		public int compare(Entry<String, Integer> entry1, Entry<String, Integer> entry2) {
+			return Integer.compare(entry1.getValue(), entry2.getValue());
+		}
+	};
 
 	/**
 	 * Performs a search and makes a WikiSearch object.
